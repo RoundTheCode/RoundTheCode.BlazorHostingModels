@@ -1,0 +1,47 @@
+﻿@page "/"
+@inject HttpClient httpClient
+@using Newtonsoft.Json
+    <h1>Here is a list of Languages</h1>
+@if (Languages != null && Languages.Any())
+{
+    <ul>
+        @foreach (var language in Languages)
+        {
+            <li>@language</li>
+        }
+    </ul>
+}
+<input @bind="MessageInput" @bind:event="oninput" />
+<button @onclick="MessageInputClick">Add Language</button>
+
+@code {
+    public string MessageInput { get; set; }
+
+    public List<string> Languages { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        Languages = await httpClient.GetJsonAsync<List<string>>("https://localhost:9000/api/language/getall");
+    }
+
+    public async Task MessageInputClick()
+    {
+        var postRequest = new Dictionary<string, string>();
+        postRequest.Add("language", MessageInput);
+
+        var requestMessage = new HttpRequestMessage()
+        {
+            Method = new HttpMethod("POST"),
+            RequestUri = new Uri("https://localhost:9000/api/language/add"),
+            Content = new StringContent(JsonConvert.SerializeObject(postRequest))
+        };
+        requestMessage.Content.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("application/json");
+
+        var response = await httpClient.SendAsync(requestMessage);
+        var responseText = await response.Content.ReadAsStringAsync();
+
+        Languages = JsonConvert.DeserializeObject<List<string>>(responseText);
+
+        MessageInput = string.Empty;
+    }
+}

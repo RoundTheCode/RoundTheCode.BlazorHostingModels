@@ -1,0 +1,32 @@
+﻿@page "/"
+@using BlazorServer.Data
+@inject ILanguageService languageService
+<h1>Here is a list of languages</h1>
+@if (Languages?.Any() ?? false)
+{
+    <ul>
+        @foreach (var language in Languages)
+        {
+            <li>@language</li>
+        }
+    </ul>
+}
+<input @bind="MessageInput" @bind:event="oninput" />
+<button @onclick="MessageInputClick">Add Language</button>
+
+@code {
+    public string MessageInput { get; set; }
+
+    public List<string> Languages { get; set; }
+
+    protected override void OnInitialized()
+    {
+        Languages = languageService.GetAll();
+    }
+
+    public void MessageInputClick()
+    {
+        languageService.AddLanguage(MessageInput);
+        MessageInput = string.Empty;
+    }
+}
